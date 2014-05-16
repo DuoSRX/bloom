@@ -9,16 +9,14 @@ type BloomFilter struct {
 	capacity uint64
 }
 
-func str_to_fnv(s string) uint64 {
-	h := fnv.New64()
-	h.Write([]byte(s))
-	return h.Sum64()
-}
+func str_to_fnv(s string) (uint64, uint64) {
+	h1 := fnv.New64()
+	h1.Write([]byte(s))
 
-func str_to_fnva(s string) uint64 {
-	h := fnv.New64a()
-	h.Write([]byte(s))
-	return h.Sum64()
+	h2 := fnv.New64a()
+	h2.Write([]byte(s))
+
+	return h1.Sum64(), h2.Sum64()
 }
 
 func New(capacity int) *BloomFilter {
@@ -26,16 +24,13 @@ func New(capacity int) *BloomFilter {
 }
 
 func (bf *BloomFilter) Add(s string) {
-	key := str_to_fnv(s)
-	bf.values[key%bf.capacity] = true
-
-	key = str_to_fnva(s)
-	bf.values[key%bf.capacity] = true
+	h1, h2 := str_to_fnv(s)
+	bf.values[h1%bf.capacity] = true
+	bf.values[h2%bf.capacity] = true
 }
 
 func (bf *BloomFilter) IsPresent(s string) bool {
-	h1 := str_to_fnv(s)
-	h2 := str_to_fnva(s)
+	h1, h2 := str_to_fnv(s)
 
 	return bf.values[h1%bf.capacity] && bf.values[h2%bf.capacity]
 }
